@@ -9,9 +9,6 @@ import (
 
 var dbHive map[string]*sql.DB = make(map[string]*sql.DB)
 
-//map record
-type Record map[int]map[string]string
-
 //create new database
 func NewDatabase(dbname, dbtype, url string) {
 	db, err := sql.Open(dbtype, url)
@@ -108,8 +105,7 @@ func (m *Module) FullJoin(table, condition string) *Module {
 	return m
 }
 
-func (m *Module) FindAll(records interface{}) {
-	db := dbHive[m.dbname]
+func (m *Module) getSqlString() string {
 	columnstr := m.columnstr
 	if l := len(columnstr); l > 1 {
 		columnstr = columnstr[:l-1]
@@ -121,9 +117,49 @@ func (m *Module) FindAll(records interface{}) {
 	}
 	query := fmt.Sprintf("select %v from %v %v %v %v %v", columnstr, m.tableName, m.join, where, m.orderby, m.limit)
 	log.Println("query = ", query)
-	rows, err := db.Query(query)
+	return query
+}
+
+func (m *Module) FindAll(records interface{}) error {
+	db := dbHive[m.dbname]
+	rows, err := db.Query(m.getSqlString())
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 	defer rows.Close()
+	if value, ok := records.([]Record); ok {
+		if value == nil {
+			value = make([]Record, 0)
+		}
+		log.Println("value = ", value)
+	}
+	return nil
+}
+
+func (m *Module) GetRecords() ([]Record, error) {
+	db := dbHive[m.dbname]
+	rows, err := db.Query(m.getSqlString())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	records := make([]Record, 0)
+	columns, _ := rows.Columns()
+	values := make([]sql.RawBytes, len(columns))
+	scanargs := make([]interface{}, len(values))
+	for i := range values {
+		scanargs[i] = &values[i]
+	}
+	for rows.Next() {
+		err := rows.Scan(scanargs...)
+		if err != nil {
+			fmt.Println(err)
+		}
+		record := make(Record)
+		for i, v := range values {
+			record[columns[i]] = v
+		}
+		records = append(records, record)
+	}
+	return records, nil
 }
