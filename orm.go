@@ -3,7 +3,6 @@ package orm
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -13,12 +12,10 @@ var dbHive map[string]*sql.DB = make(map[string]*sql.DB)
 func NewDatabase(dbname, dbtype, url string) {
 	db, err := sql.Open(dbtype, url)
 	if err != nil {
-		log.Println("open database fail", err)
 		panic(err.Error())
 	}
 	err = db.Ping()
 	if err != nil {
-		log.Println("database connect fail", err)
 		panic(err.Error())
 	}
 	dbHive[dbname] = db
@@ -116,7 +113,6 @@ func (m *Module) getSqlString() string {
 		where = "where " + where
 	}
 	query := fmt.Sprintf("select %v from %v %v %v %v %v", columnstr, m.tableName, m.join, where, m.orderby, m.limit)
-	log.Println("query = ", query)
 	return query
 }
 
@@ -131,12 +127,19 @@ func (m *Module) FindAll(records interface{}) error {
 		if value == nil {
 			value = make([]Record, 0)
 		}
-		log.Println("value = ", value)
 	}
 	return nil
 }
 
-func (m *Module) GetRecords() ([]Record, error) {
+func (m *Module) OneRecord() (Record, error) {
+	rs, err := m.Limit(1).AllRecords()
+	if err != nil {
+		return nil, err
+	}
+	return rs[0], nil
+}
+
+func (m *Module) AllRecords() ([]Record, error) {
 	db := dbHive[m.dbname]
 	rows, err := db.Query(m.getSqlString())
 	if err != nil {
