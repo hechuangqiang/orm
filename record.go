@@ -6,19 +6,31 @@ import (
 	"strconv"
 )
 
-type Record map[string][]byte
+type Record struct {
+	result map[string][]byte
+	param  map[string]interface{}
+}
+
+func NewRecord() Record {
+	return Record{make(map[string][]byte), make(map[string]interface{})}
+}
+
+func (r *Record) Set(key string, value interface{}) *Record {
+	r.param[key] = value
+	return r
+}
 
 func (r Record) GetString(field string) string {
-	return string(r[field])
+	return string(r.result[field])
 }
 
 func (r Record) GetBytes(key string) []byte {
-	return r[key]
+	return r.result[key]
 }
 
 func (r Record) GetInt(key string) int {
 	var x int
-	s := asString(r[key])
+	s := asString(r.result[key])
 	i64, err := strconv.ParseInt(s, 10, reflect.TypeOf(x).Bits())
 	if err != nil {
 		panic(err.Error())
@@ -28,7 +40,7 @@ func (r Record) GetInt(key string) int {
 }
 
 func (r Record) GetInt64(key string) int64 {
-	s := asString(r[key])
+	s := asString(r.result[key])
 	i64, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
 		panic(err.Error())
@@ -37,7 +49,7 @@ func (r Record) GetInt64(key string) int64 {
 }
 
 func (r Record) GetFloat32(key string) float32 {
-	s := asString(r[key])
+	s := asString(r.result[key])
 	f64, err := strconv.ParseFloat(s, 32)
 	if err != nil {
 		panic(err.Error())
@@ -46,7 +58,7 @@ func (r Record) GetFloat32(key string) float32 {
 }
 
 func (r Record) GetFloat64(key string) float64 {
-	s := asString(r[key])
+	s := asString(r.result[key])
 	f64, err := strconv.ParseFloat(s, 64)
 	if err != nil {
 		panic(err.Error())

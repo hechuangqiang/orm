@@ -3,6 +3,7 @@ package orm
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -29,13 +30,18 @@ type Module struct {
 	orderby   string //orderby
 	limit     string //limit
 	join      string //join
+	pk        string //pk
 	dbname    string //dbname
 }
 
 //create new Module
 func NewModule(tableName string) *Module {
-	m := &Module{tableName: tableName, columnstr: "*", dbname: "default"}
+	m := &Module{tableName: tableName, columnstr: "*", dbname: "default", pk: "id"}
 	return m
+}
+
+func (m *Module) GetDB() *sql.DB {
+	return dbHive[m.dbname]
 }
 
 //change db
@@ -116,25 +122,26 @@ func (m *Module) getSqlString() string {
 	return query
 }
 
-func (m *Module) FindAll(records interface{}) error {
+func (m *Module) Query(callBackFunc func(*sql.Rows)) error {
 	db := dbHive[m.dbname]
 	rows, err := db.Query(m.getSqlString())
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
-	if value, ok := records.([]Record); ok {
-		if value == nil {
-			value = make([]Record, 0)
-		}
-	}
+	callBackFunc(rows)
 	return nil
 }
+func (m *Module) QueryOne(callBackFunc func(*sql.Row)) {
+	db := dbHive[m.dbname]
+	row := db.QueryRow(m.getSqlString())
+	callBackFunc(row)
+}
 
-func (m *Module) OneRecord() (Record, error) {
+func (m *Module) OneRecord() (record Record, err error) {
 	rs, err := m.Limit(1).AllRecords()
 	if err != nil {
-		return nil, err
+		return record, err
 	}
 	return rs[0], nil
 }
@@ -158,11 +165,46 @@ func (m *Module) AllRecords() ([]Record, error) {
 		if err != nil {
 			fmt.Println(err)
 		}
-		record := make(Record)
+		record := NewRecord()
 		for i, v := range values {
-			record[columns[i]] = v
+			record.result[columns[i]] = v
 		}
 		records = append(records, record)
 	}
 	return records, nil
+}
+func (m *Module) SetPK(pk string) *Module {
+	m.pk = pk
+	return m
+}
+
+func (m *Module) FindRecordById(id int) *Module {
+	m.Filter(m.pk, "=", id)
+	return m
+}
+
+func (m *Module) Insert(record Record) error {
+	columns := ""
+	values := ""
+	for c, v := range record.param {
+		columns = columns + c + ","
+		rv := reflect.ValueOf(v)
+		switch rv.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Bool:
+			values = values + fmt.Sprintf("%v", v) + ","
+		default:
+			values = values + fmt.Sprintf("'%v'", v) + ","
+		}
+	}
+	if l := len(columns); l > 0 {
+		columns = columns[:l-1]
+	}
+	if l := len(values); l > 0 {
+		values = values[:l-1]
+	}
+	insertSql := fmt.Sprintf("insert into %v(%v) values(%v)", m.tableName, columns, values)
+	fmt.Println(insertSql)
+	db := dbHive[m.dbname]
+	_, err := db.Exec(insertSql)
+	return err
 }
