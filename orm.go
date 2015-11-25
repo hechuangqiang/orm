@@ -208,3 +208,20 @@ func (m *Module) Insert(record Record) error {
 	_, err := db.Exec(insertSql)
 	return err
 }
+
+func (m *Module) DeleteById(id int) error {
+	m.Filter(m.pk, "=", id)
+	return m.Delete()
+}
+
+func (m *Module) Delete() error {
+	where := m.filters
+	where = strings.TrimSpace(where)
+	if len(where) > 0 {
+		where = "where " + where
+	}
+	delSql := fmt.Sprintf("delete %v %v", m.tableName, where)
+	fmt.Println(delSql)
+	_, err := dbHive[m.dbname].Exec(delSql)
+	return err
+}
