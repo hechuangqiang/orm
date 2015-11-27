@@ -2,7 +2,9 @@ package orm
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"log"
 	"reflect"
 	"strings"
 )
@@ -37,6 +39,16 @@ type Module struct {
 //create new Module
 func NewModule(tableName string) *Module {
 	m := &Module{tableName: tableName, columnstr: "*", dbname: "default", pk: "id"}
+	return m
+}
+
+func (m *Module) Clean() *Module {
+	m.columnstr = "*"
+	m.filters = ""
+	m.orderby = ""
+	m.limit = ""
+	m.join = ""
+	m.pk = "id"
 	return m
 }
 
@@ -113,6 +125,12 @@ func (m *Module) getSqlString() string {
 	if l := len(columnstr); l > 1 {
 		columnstr = columnstr[:l-1]
 	}
+	query := m.buildSql(columnstr)
+	log.Println("sql = ", query)
+	return query
+}
+
+func (m *Module) buildSql(columnstr string) string {
 	where := m.filters
 	where = strings.TrimSpace(where)
 	if len(where) > 0 {
@@ -138,10 +156,24 @@ func (m *Module) QueryOne(callBackFunc func(*sql.Row)) {
 	callBackFunc(row)
 }
 
+func (m *Module) IsExist() (bool, error) {
+	db := dbHive[m.dbname]
+	row := db.QueryRow(m.buildSql("count(*)"))
+	var count int
+	err := row.Scan(&count)
+	if count > 0 {
+		return true, nil
+	}
+	return false, err
+}
+
 func (m *Module) OneRecord() (record Record, err error) {
 	rs, err := m.Limit(1).AllRecords()
 	if err != nil {
 		return record, err
+	}
+	if len(rs) == 0 {
+		return NewRecord(), errors.New("not fond record")
 	}
 	return rs[0], nil
 }
