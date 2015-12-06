@@ -126,7 +126,6 @@ func (m *Module) getSqlString() string {
 		columnstr = columnstr[:l-1]
 	}
 	query := m.buildSql(columnstr)
-	log.Println("sql = ", query)
 	return query
 }
 
@@ -137,6 +136,7 @@ func (m *Module) buildSql(columnstr string) string {
 		where = "where " + where
 	}
 	query := fmt.Sprintf("select %v from %v %v %v %v %v", columnstr, m.tableName, m.join, where, m.orderby, m.limit)
+	log.Println("sql = ", query)
 	return query
 }
 
@@ -157,14 +157,26 @@ func (m *Module) QueryOne(callBackFunc func(*sql.Row)) {
 }
 
 func (m *Module) IsExist() (bool, error) {
-	db := dbHive[m.dbname]
-	row := db.QueryRow(m.buildSql("count(*)"))
-	var count int
-	err := row.Scan(&count)
+	count, err := m.Count()
 	if count > 0 {
 		return true, nil
 	}
 	return false, err
+}
+
+func (m *Module) Count() (int, error) {
+	db := dbHive[m.dbname]
+	where := m.filters
+	where = strings.TrimSpace(where)
+	if len(where) > 0 {
+		where = "where " + where
+	}
+	query := fmt.Sprintf("select %v from %v %v %v %v", "count(*)", m.tableName, m.join, where, m.orderby)
+	log.Println("sql = ", query)
+	row := db.QueryRow(query)
+	var count int
+	err := row.Scan(&count)
+	return count, err
 }
 
 func (m *Module) OneRecord() (record Record, err error) {
