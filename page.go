@@ -1,13 +1,13 @@
 package orm
 
 type Page struct {
-	PageNo      int
-	PageSize    int
-	ResultCount int
-	List        interface{}
+	PageNo      int           `json:"pageNo"`
+	PageSize    int           `json:"pageSize"`
+	ResultCount int           `json:"resultCount"`
+	List        []interface{} `json:"list"`
 }
 
-func NewPage(pageNo, pageSize int) Page {
+func NewPage(pageNo, pageSize int) *Page {
 	p := Page{}
 	if pageNo == 0 {
 		p.PageNo = 1
@@ -21,7 +21,7 @@ func NewPage(pageNo, pageSize int) Page {
 		p.PageSize = pageSize
 	}
 
-	return p
+	return &p
 }
 
 func (p *Page) StartRow() int {
