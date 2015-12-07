@@ -126,6 +126,8 @@ func (m *Module) getSqlString() string {
 		columnstr = columnstr[:l-1]
 	}
 	query := m.buildSql(columnstr)
+	query += " " + m.limit
+	log.Println("sql = ", query)
 	return query
 }
 
@@ -135,8 +137,7 @@ func (m *Module) buildSql(columnstr string) string {
 	if len(where) > 0 {
 		where = "where " + where
 	}
-	query := fmt.Sprintf("select %v from %v %v %v %v %v", columnstr, m.tableName, m.join, where, m.orderby, m.limit)
-	log.Println("sql = ", query)
+	query := fmt.Sprintf("select %v from %v %v %v %v", columnstr, m.tableName, m.join, where, m.orderby)
 	return query
 }
 
@@ -166,12 +167,7 @@ func (m *Module) IsExist() (bool, error) {
 
 func (m *Module) Count() (int, error) {
 	db := dbHive[m.dbname]
-	where := m.filters
-	where = strings.TrimSpace(where)
-	if len(where) > 0 {
-		where = "where " + where
-	}
-	query := fmt.Sprintf("select %v from %v %v %v %v", "count(*)", m.tableName, m.join, where, m.orderby)
+	query := m.buildSql("count(*)")
 	log.Println("sql = ", query)
 	row := db.QueryRow(query)
 	var count int
