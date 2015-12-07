@@ -141,6 +141,19 @@ func (m *Module) buildSql(columnstr string) string {
 	return query
 }
 
+func (m *Module) QueryPage(page *Page, callBackFunc func(*sql.Rows)) error {
+	db := dbHive[m.dbname]
+	m.Limit(page.StartRow(), page.PageSize)
+	page.ResultCount, _ = m.Count()
+	rows, err := db.Query(m.getSqlString())
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	callBackFunc(rows)
+	return nil
+}
+
 func (m *Module) Query(callBackFunc func(*sql.Rows)) error {
 	db := dbHive[m.dbname]
 	rows, err := db.Query(m.getSqlString())

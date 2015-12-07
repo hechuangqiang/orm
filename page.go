@@ -4,6 +4,7 @@ type Page struct {
 	PageNo      int
 	PageSize    int
 	ResultCount int
+	List        interface{}
 }
 
 func NewPage(pageNo, pageSize int) Page {
