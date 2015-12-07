@@ -267,9 +267,37 @@ func (m *Module) Insert(record Record) error {
 	return err
 }
 
+func (m *Module) Update(record Record) error {
+	values := ""
+	for c, v := range record.param {
+		values = values + c + "="
+		rv := reflect.ValueOf(v)
+		switch rv.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Bool:
+			values += fmt.Sprintf("%v", v)
+		default:
+			values += fmt.Sprintf("'%v'", v)
+		}
+		values += ","
+	}
+	if l := len(values); l > 0 {
+		values = values[:l-1]
+	}
+	sql := fmt.Sprintf("update %v set %v where %v", m.tableName, values, m.filters)
+	log.Println("sql = ", sql)
+	db := dbHive[m.dbname]
+	_, err := db.Exec(sql)
+	return err
+}
+
 func (m *Module) DeleteById(id int) error {
 	m.Filter(m.pk, "=", id)
 	return m.Delete()
+}
+
+func (m *Module) FindById(id int) *Module {
+	m.Filter(m.pk, "=", id)
+	return m
 }
 
 func (m *Module) Delete() error {
