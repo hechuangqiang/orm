@@ -241,7 +241,7 @@ func (m *Module) FindRecordById(id int) *Module {
 	return m
 }
 
-func (m *Module) Insert(record Record) error {
+func (m *Module) Insert(record Record) (int, error) {
 	columns := ""
 	values := ""
 	for c, v := range record.param {
@@ -263,8 +263,12 @@ func (m *Module) Insert(record Record) error {
 	insertSql := fmt.Sprintf("insert into %v(%v) values(%v)", m.tableName, columns, values)
 	fmt.Println(insertSql)
 	db := dbHive[m.dbname]
-	_, err := db.Exec(insertSql)
-	return err
+	result, err := db.Exec(insertSql)
+	if err != nil {
+		return 0, err
+	}
+	id, err := result.LastInsertId()
+	return int(id), err
 }
 
 func (m *Module) Update(record Record) error {
