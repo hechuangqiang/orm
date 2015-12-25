@@ -310,7 +310,7 @@ func (m *Module) Delete() error {
 	if len(where) > 0 {
 		where = "where " + where
 	}
-	delSql := fmt.Sprintf("delete %v %v", m.tableName, where)
+	delSql := fmt.Sprintf("delete from %v %v", m.tableName, where)
 	fmt.Println(delSql)
 	_, err := dbHive[m.dbname].Exec(delSql)
 	return err
