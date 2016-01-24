@@ -25,7 +25,7 @@ func NewPage(pageNo, pageSize int) *Page {
 }
 
 func (p *Page) StartRow() int {
-	return p.PageSize*(p.PageNo-1) + 1
+	return p.PageSize * (p.PageNo - 1)
 }
 
 func (p *Page) PageCount() int {
