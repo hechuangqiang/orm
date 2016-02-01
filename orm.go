@@ -145,6 +145,7 @@ func (m *Module) QueryPage(page *Page, callBackFunc func(*sql.Rows)) error {
 	db := dbHive[m.dbname]
 	m.Limit(page.StartRow(), page.PageSize)
 	query := m.buildSql("count(*)")
+	log.Println(query)
 	row := db.QueryRow(query)
 	err := row.Scan(&page.ResultCount)
 	if err != nil {
