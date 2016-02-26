@@ -98,25 +98,25 @@ func (m *Module) Limit(size ...int) *Module {
 
 //leftJoin
 func (m *Module) LeftJoin(table, condition string) *Module {
-	m.join = fmt.Sprintf("LEFT JOIN %v ON %v", table, condition)
+	m.join += fmt.Sprintf(" LEFT JOIN %v ON %v", table, condition)
 	return m
 }
 
 //rightJoin
 func (m *Module) RightJoin(table, condition string) *Module {
-	m.join = fmt.Sprintf("RIGHT JOIN %v ON %v", table, condition)
+	m.join += fmt.Sprintf(" RIGHT JOIN %v ON %v", table, condition)
 	return m
 }
 
 //join
 func (m *Module) Join(table, condition string) *Module {
-	m.join = fmt.Sprintf("INNER JOIN %v ON %v", table, condition)
+	m.join += fmt.Sprintf(" INNER JOIN %v ON %v", table, condition)
 	return m
 }
 
 //fulljoin
 func (m *Module) FullJoin(table, condition string) *Module {
-	m.join = fmt.Sprintf("FULL JOIN %v ON %v", table, condition)
+	m.join += fmt.Sprintf(" FULL JOIN %v ON %v", table, condition)
 	return m
 }
 
