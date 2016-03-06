@@ -21,6 +21,8 @@ func NewPage(pageNo, pageSize int) *Page {
 		p.PageSize = pageSize
 	}
 
+	p.List = make([]interface{}, 0)
+
 	return &p
 }
 
