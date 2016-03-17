@@ -30,6 +30,7 @@ type Module struct {
 	tableName string //table
 	filters   string //condition
 	orderby   string //orderby
+	groupby   string //groupby
 	limit     string //limit
 	join      string //join
 	pk        string //pk
@@ -76,6 +77,11 @@ func (m *Module) Filter(param ...interface{}) *Module {
 	for _, p := range param {
 		m.filters += fmt.Sprintf("%v", p)
 	}
+	return m
+}
+
+func (m *Module) GroupBy(param string) *Module {
+	m.groupby = fmt.Sprintf("GROUP BY %v", param)
 	return m
 }
 
@@ -137,7 +143,7 @@ func (m *Module) buildSql(columnstr string) string {
 	if len(where) > 0 {
 		where = "where " + where
 	}
-	query := fmt.Sprintf("select %v from %v %v %v %v", columnstr, m.tableName, m.join, where, m.orderby)
+	query := fmt.Sprintf("select %v from %v %v %v %v %v", columnstr, m.tableName, m.join, where, m.groupby, m.orderby)
 	return query
 }
 
