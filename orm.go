@@ -150,14 +150,22 @@ func (m *Module) buildSql(columnstr string) string {
 func (m *Module) QueryPage(page *Page, callBackFunc func(*sql.Rows)) error {
 	db := dbHive[m.dbname]
 	m.Limit(page.StartRow(), page.PageSize)
-	query := m.buildSql("count(*)")
+	var query string
+	query = page.GetCountSql()
+	if query == "" {
+		query = m.buildSql("count(*)")
+	}
 	log.Println(query)
 	row := db.QueryRow(query)
 	err := row.Scan(&page.ResultCount)
 	if err != nil {
 		return err
 	}
-	rows, err := db.Query(m.getSqlString())
+	query = page.GetQuerySql()
+	if query == "" {
+		query = m.getSqlString()
+	}
+	rows, err := db.Query(query)
 	if err != nil {
 		return err
 	}
