@@ -43,6 +43,16 @@ func NewModule(tableName string) *Module {
 	return m
 }
 
+func NewModuleAlias(tableName, alias string) *Module {
+	m := &Module{
+		tableName: tableName + " " + alias,
+		columnstr: "*",
+		dbname:    "default",
+		pk:        "id",
+	}
+	return m
+}
+
 func (m *Module) Clean() *Module {
 	m.columnstr = "*"
 	m.filters = ""
