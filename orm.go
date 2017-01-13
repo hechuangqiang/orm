@@ -114,13 +114,25 @@ func (m *Module) Limit(size ...int) *Module {
 
 //leftJoin
 func (m *Module) LeftJoin(table, condition string) *Module {
-	m.join += fmt.Sprintf(" LEFT JOIN %v ON %v", table, condition)
+	m.join += fmt.Sprintf(" LEFT JOIN %v ON %v ", table, condition)
+	return m
+}
+
+//leftJoinAlias
+func (m *Module) LeftJoinAlias(table, alias, condition string) *Module {
+	m.join += fmt.Sprintf(" LEFT JOIN %v %v ON %v ", table, alias, condition)
 	return m
 }
 
 //rightJoin
 func (m *Module) RightJoin(table, condition string) *Module {
-	m.join += fmt.Sprintf(" RIGHT JOIN %v ON %v", table, condition)
+	m.join += fmt.Sprintf(" RIGHT JOIN %v ON %v ", table, condition)
+	return m
+}
+
+//rightJoinAlias
+func (m *Module) RightJoinAlias(table, alias, condition string) *Module {
+	m.join += fmt.Sprintf(" RIGHT JOIN %v %v ON %v ", table, alias, condition)
 	return m
 }
 
@@ -130,9 +142,21 @@ func (m *Module) Join(table, condition string) *Module {
 	return m
 }
 
+//joinAlias
+func (m *Module) JoinAlias(table, alias, condition string) *Module {
+	m.join += fmt.Sprintf(" INNER JOIN %v %v ON %v ", table, alias, condition)
+	return m
+}
+
 //fulljoin
 func (m *Module) FullJoin(table, condition string) *Module {
 	m.join += fmt.Sprintf(" FULL JOIN %v ON %v", table, condition)
+	return m
+}
+
+//funllJoinAlias
+func (m *Module) FullJoinAlias(table, alias, condition string) *Module {
+	m.join += fmt.Sprintf(" FULL JOIN %v %v ON %v", table, condition)
 	return m
 }
 
